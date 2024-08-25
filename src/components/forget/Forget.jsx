@@ -1,58 +1,45 @@
-import React, { useState } from 'react'
-import{ useFormik } from 'formik'; 
-import axios from 'axios'; 
-import {  Link, useNavigate } from 'react-router-dom';
-import * as Yup from 'yup' ;
+import React, { useState } from 'react';
+import { useFormik } from 'formik';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import * as Yup from 'yup';
 
 export default function Forget() {
+  const [apiError, setApiError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const [apiError, setapiError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const validationSchema = Yup.object().shape({
+    email: Yup.string().email('Email is invalid').required('Email is required'),
+  });
 
-
-  let x = Yup.object().shape({
-    email:Yup.string().email('email is invalid').required('email is required'),
-  })
-      // !programming routing
-  const navigate =  useNavigate();
-
-
-  async function handleLogin(formValues){
-    setIsLoading(true)
-          // ! to send data to backend
-    let {data}= await axios.post('https://ecommerce.routemisr.com/api/v1/auth/forgotPasswords', formValues)
-    .then((x)=> { 
+  async function handleForget(formValues) {
+    setIsLoading(true);
+    try {
+      const response = await axios.post('https://ecommerce.routemisr.com/api/v1/auth/forgotPasswords', formValues);
       
-      setIsLoading(false)
-      console.log(x);
-      console.log('done');
-
-      navigate('/')
-
-    })
-    .catch((apiResponse)=> {
-      setapiError(apiResponse.response.data.message);
-      setIsLoading(false)
-    })
-
-   
-
-    console.log(formValues);
+      console.log(response);
+      console.log('Done');
+      
+      navigate('/verify');
+    } catch (error) {
+      if (error.response && error.response.data) {
+        setApiError(error.response.data.message);
+      } else {
+        setApiError('An unexpected error occurred');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-let formik = useFormik({
-
-  initialValues: {
-   
-    email: '',
-   
-  
-  },
-  onSubmit: handleLogin,
-  validationSchema: x
-
-})
-
+  const formik = useFormik({
+    initialValues: {
+      email: '',
+    },
+    onSubmit: handleForget,
+    validationSchema: validationSchema,
+  });
 
   return (
     <>
@@ -82,9 +69,7 @@ let formik = useFormik({
   <p>{formik.errors.email}</p>
 </div> :null}
 
- 
 
- 
   
   <button type="submit" className="text-white bg-green-950 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-4 py-2 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
     

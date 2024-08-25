@@ -1,75 +1,57 @@
-import React, { useContext, useState } from 'react'
-import style from './register.module.css'
-import{ useFormik } from 'formik'; 
-import axios from 'axios'; 
-import {  useNavigate } from 'react-router-dom';
-import * as Yup from 'yup' ;
-import { userContext } from '../../context/userContext';
+import React, { useContext, useState } from 'react';
+import { useFormik } from 'formik';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import * as Yup from 'yup';
+import { UserContext } from '../../context/UserContext';
 
 export default function Register() {
+  const { setToken } = useContext(UserContext);
+  const [apiError, setApiError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  let setToken=useContext(userContext)
+  const validationSchema = Yup.object().shape({
+    name: Yup.string()
+      .min(3, 'Name must be at least 3 characters')
+      .max(10, 'Name must be at most 10 characters')
+      .required('Name is required'),
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
+    phone: Yup.string()
+      .matches(/^01[1250][0-9]{8}$/, 'Phone must be a valid Egyptian phone number')
+      .required('Phone is required'),
+    password: Yup.string()
+      .matches(/^[A-Z][0-9]{5}$/, 'Password must start with an uppercase letter followed by 5 numbers')
+      .required('Password is required'),
+    rePassword: Yup.string()
+      .oneOf([Yup.ref('password')], 'Passwords must match')
+      .required('Confirm password is required'),
+  });
 
-  const [apiError, setapiError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-
-  let x = Yup.object().shape({
-    name:Yup.string().min(3,'name minlength is 3').max(10,'name maxlength is 10').required('name is required'),
-    email:Yup.string().email('email is invalid').required('email is required'),
-    phone:Yup.string().matches(/^01[1250][0-9]{8}$/,'phone must be valid egyptian phone number').required('phone is required'),
-    password:Yup.string().matches(/^[A-Z][0-9]{5}/,'password must start uppercase and 5 numbers').required('password is required'),
-    rePassword:Yup.string().oneOf([Yup.ref('password')],'password and repassword must be matched').required('repassword is required'),
-  })
-      // !programming routing
-  const navigate =  useNavigate();
-
-
-  async function handleRegister(formValues){
-    setIsLoading(true)
-          // ! to send data to backend
-    let {data}= await axios.post('https://ecommerce.routemisr.com/api/v1/auth/signup', formValues)
-    .then((x)=> { 
-      
-      setIsLoading(false)
-      console.log(x);
-      console.log('done');
-
-      navigate('/')
-
-      setToken(data.token)
-
-
-    })
-    .catch((apiResponse)=> {
-      setapiError(apiResponse.response.data.message);
-      setIsLoading(false)
-      // console.log(apiResponse.response.data.message)
-    })
-
-    // if (data.message==='success') {
-    //   console.log('done');
-
-    //   navigate('/')
-      
-    // }
-
-    console.log(formValues);
-  }
-
-let formik = useFormik({
-
-  initialValues: {
-    name: '',
-    phone: '',
-    email: '',
-    password: '',
-    rePassword: ''
-  },
-  onSubmit: handleRegister,
-  validationSchema: x
-
-})
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+      phone: '',
+      email: '',
+      password: '',
+      rePassword: '',
+    },
+    onSubmit: async (values) => {
+      setIsLoading(true);
+      try {
+        const { data } = await axios.post('https://ecommerce.routemisr.com/api/v1/auth/signup', values);
+        setToken(data.token);
+        navigate('/');
+      } catch (error) {
+        setApiError(error.response?.data?.message || 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    validationSchema,
+  });
 
 
   return (

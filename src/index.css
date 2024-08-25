@@ -5,6 +5,19 @@
 
 
 
-
-
+.product button{
+    transition: transform 0.5s , opacity  0.5s;
+    transform: translateY(100%);
+    opacity: 0;
+}
+.product:hover button{
+    opacity: 1;
+    transform: translateY(0%);
+}
+.pacifico {
+    font-family: "Pacifico", cursive;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 50px;
+}
 
